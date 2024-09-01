@@ -4,7 +4,7 @@ from decimal import Decimal
 
 import sqlalchemy
 from sqlalchemy import create_engine, DateTime, func, String
-from sqlalchemy.orm import Mapped, DeclarativeBase, mapped_column
+from sqlalchemy.orm import Mapped, DeclarativeBase, mapped_column, Session, sessionmaker
 
 engine = create_engine('mysql+pymysql://root:zhangdapeng520@127.0.0.1:3306/fastzdp_sqlalchemy?charset=utf8')
 
@@ -34,5 +34,5 @@ class Employee(BaseModel):
 
 
 if __name__ == '__main__':
-    BaseModel.metadata.drop_all(engine)
-    BaseModel.metadata.create_all(engine)
+    with sessionmaker(engine).begin() as session:
+        session.add(Employee(name="李四", age=23, salary=Decimal(30000), gender=GenderEnum.MALE.value))
