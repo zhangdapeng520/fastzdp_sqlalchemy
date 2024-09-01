@@ -3,7 +3,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import List, Optional
 import sqlalchemy
-from sqlalchemy import create_engine, DateTime, func, String, select
+from sqlalchemy import create_engine, DateTime, func, String, select, ForeignKey
 from sqlalchemy.orm import Mapped, DeclarativeBase, mapped_column, Session, sessionmaker, relationship
 
 engine = create_engine('mysql+pymysql://root:zhangdapeng520@127.0.0.1:3306/fastzdp_sqlalchemy?charset=utf8', echo=True)
@@ -38,9 +38,16 @@ class Employee(BaseModel):
 class Department(BaseModel):
     """部门模型，对应部门表"""
     __tablename__ = 'department'
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(36), name="name", unique=True, nullable=False, comment="部门名称")
     city: Mapped[str] = mapped_column(String(36), name="city", unique=True, nullable=False, comment="所在城市")
     employees: Mapped[List['Employee']] = relationship("Employee", back_populates="department")
+
+    # 自关联
+    parent_id: Mapped[Optional[int]] = mapped_column(ForeignKey("department.id"), nullable=True, comment="上级部门ID")
+    children: Mapped[List["Department"]] = relationship("Department", back_populates="parent")
+    # remote_side=[id] 用来区分上下级关系，必须要加
+    parent: Mapped[Optional["Department"]] = relationship("Department", back_populates="children", remote_side=[id])
 
 
 if __name__ == '__main__':

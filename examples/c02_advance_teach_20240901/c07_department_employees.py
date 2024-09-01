@@ -31,7 +31,8 @@ class Employee(BaseModel):
     bonus: Mapped[float] = mapped_column(sqlalchemy.FLOAT, default=0, comment="奖金")
     is_leave: Mapped[bool] = mapped_column(sqlalchemy.Boolean, default=False, comment="是否离职")
     gender: Mapped[GenderEnum] = mapped_column(sqlalchemy.String(6), default=GenderEnum.MALE, comment="性别")
-    department_id: Mapped[int] = mapped_column(sqlalchemy.ForeignKey("department.id"), comment="部门ID", nullable=True)
+    department_id: Mapped[int] = mapped_column(sqlalchemy.ForeignKey("department.id", ondelete="CASCADE"),
+                                               nullable=False, comment="部门ID")
     department: Mapped[Optional['Department']] = relationship("Department", back_populates="employees")
 
 
@@ -40,9 +41,13 @@ class Department(BaseModel):
     __tablename__ = 'department'
     name: Mapped[str] = mapped_column(String(36), name="name", unique=True, nullable=False, comment="部门名称")
     city: Mapped[str] = mapped_column(String(36), name="city", unique=True, nullable=False, comment="所在城市")
-    employees: Mapped[List['Employee']] = relationship("Employee", back_populates="department")
+    employees: Mapped[List['Employee']] = relationship("Employee", back_populates="department", passive_deletes=True)
 
 
 if __name__ == '__main__':
-    BaseModel.metadata.drop_all(engine)
-    BaseModel.metadata.create_all(engine)
+    with sessionmaker(engine).begin() as session:
+        department = session.get(Department, 1)
+        print(department.name)
+
+        for employee in department.employees:
+            print(employee.id, employee.name)
